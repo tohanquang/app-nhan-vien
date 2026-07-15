@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:14.23-alpine3.24
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: nhanvien_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    image: python:3.12-slim
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy # Chỉ khởi động web khi db đã sẵn sàng
+    command: bash -c "pip install -r requirements.txt && python manage.py migrate && python manage.py seed_data && python manage.py runserver 0.0.0.0:8000"
