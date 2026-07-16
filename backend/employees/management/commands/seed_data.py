@@ -9,7 +9,7 @@ class Command(BaseCommand):
         Employee.objects.all().delete()
         
         # Thêm dữ liệu mới
-        Employee.objects.create(name="Nguyen Van A", email="a@test.com", position="Dev")
-        Employee.objects.create(name="Tran Thi B", email="b@test.com", position="Tester")
+        Employee.objects.create(name="Nguyen Van A", email="a@test.com", position="Dev", phone="123456")
+        Employee.objects.create(name="Tran Thi B", email="b@test.com", position="Tester",phone="987765")
         
         self.stdout.write(self.style.SUCCESS('Đã seed dữ liệu thành công!'))

@@ -18,6 +18,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=100)),
                 ('email', models.EmailField(max_length=254, unique=True)),
                 ('position', models.CharField(max_length=100)),
+                
             ],
         ),
     ]
