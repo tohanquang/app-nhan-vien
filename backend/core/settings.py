@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'employees',
 ]
@@ -124,8 +125,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # Đây là cổng mặc định của Vite
+    "http://localhost:5173",
+     "http://localhost:3000", # Đây là cổng mặc định của Vite
 ]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Nếu bạn muốn cho phép cả các phương thức đặc biệt (như PUT, DELETE, PATCH)
 # thì nên thêm dòng này để tránh bị chặn trong các tác vụ CRUD:
