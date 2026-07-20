@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useForm } from 'react-hook-form'; // Import thư viện
+import { useForm } from 'react-hook-form';
 
 function App() {
   const [employees, setEmployees] = useState([]);
@@ -9,39 +9,51 @@ function App() {
   const [editId, setEditId] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Hook cho form Đăng nhập
   const { register: registerLogin, handleSubmit: handleSubmitLogin } = useForm();
-  
-  // Hook cho form Nhân viên
-  const { register: registerEmp, handleSubmit: handleSubmitEmp, reset, setValue } = useForm();
+  const { 
+    register: registerEmp, 
+    handleSubmit: handleSubmitEmp, 
+    reset, 
+    setValue,
+    formState: { errors } 
+  } = useForm();
+
+  useEffect(() => {
+    if (localStorage.getItem('access_token')) setIsLoggedIn(true);
+  }, []);
 
   useEffect(() => {
     if (isLoggedIn) {
-      axios.get('http://localhost:8000/api/employees/')
-        .then(res => setEmployees(res.data))
-        .catch(err => console.error("Lỗi tải danh sách:", err));
+      axios.get('http://localhost:8000/api/employees/', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      })
+      .then(res => setEmployees(res.data))
+      .catch(err => console.error("Lỗi tải data:", err));
     }
   }, [isLoggedIn]);
 
-  // Đăng nhập với React Hook Form
   const onLogin = async (data) => {
     try {
-      await axios.post('http://localhost:8000/api/login/', data);
+      const res = await axios.post('http://localhost:8000/api/login/', data);
+      localStorage.setItem('access_token', res.data.access);
       setIsLoggedIn(true);
-    } catch {
-      alert("Sai tài khoản hoặc mật khẩu!");
-    }
+      window.location.reload();
+    } catch { alert("Đăng nhập thất bại!"); }
   };
 
-  const openForm = (type, employee = null) => {
+  const handleLogout = () => {
+    localStorage.clear();
+    setIsLoggedIn(false);
+  };
+
+  const openForm = (type, emp = null) => {
     setFormType(type);
-    if (type === 'edit' && employee) {
-      setEditId(employee.id);
-      // Gán dữ liệu vào form
-      setValue('name', employee.name);
-      setValue('position', employee.position);
-      setValue('email', employee.email);
-      setValue('phone', employee.phone);
+    if (type === 'edit' && emp) {
+      setEditId(emp.id);
+      setValue('name', emp.name);
+      setValue('position', emp.position);
+      setValue('email', emp.email);
+      setValue('phone', emp.phone);
     } else {
       setEditId(null);
       reset({ name: '', position: '', email: '', phone: '' });
@@ -49,111 +61,134 @@ function App() {
     setIsFormOpen(true);
   };
 
-  const onSave = async (data) => {
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa?")) return;
     try {
-      if (formType === 'add') {
-        const res = await axios.post('http://localhost:8000/api/employees/', data);
-        setEmployees([...employees, res.data]);
-      } else {
-        const res = await axios.put(`http://localhost:8000/api/employees/${editId}/`, data);
-        setEmployees(employees.map(emp => (emp.id === editId ? res.data : emp)));
-      }
-      setIsFormOpen(false);
-    } catch (err) {
-      alert("Lỗi server!");
-    }
+      await axios.delete(`http://localhost:8000/api/employees/${id}/`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      setEmployees(employees.filter(emp => emp.id !== id));
+    } catch { alert("Lỗi khi xóa!"); }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa?")) {
-      await axios.delete(`http://localhost:8000/api/employees/${id}/`);
-      setEmployees(employees.filter(emp => emp.id !== id));
-    }
+  const onSave = async (data) => {
+    const config = { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } };
+    try {
+      if (formType === 'add') {
+        const res = await axios.post('http://localhost:8000/api/employees/', data, config);
+        setEmployees([...employees, res.data]);
+      } else {
+        const res = await axios.put(`http://localhost:8000/api/employees/${editId}/`, data, config);
+        setEmployees(employees.map(e => e.id === editId ? res.data : e));
+      }
+      setIsFormOpen(false);
+    } catch (err) { alert("Lỗi lưu dữ liệu: " + (err.response?.data?.phone || "Kiểm tra lại dữ liệu")); }
   };
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-        <form onSubmit={handleSubmitLogin(onLogin)} className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
-          <h2 className="text-2xl font-bold mb-6 text-center">Đăng nhập</h2>
-          <input {...registerLogin("username", { required: true })} placeholder="Tài khoản" className="w-full p-3 mb-4 border rounded" />
-          <input {...registerLogin("password", { required: true })} type="password" placeholder="Mật khẩu" className="w-full p-3 mb-6 border rounded" />
-          <button className="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">Đăng nhập</button>
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <form onSubmit={handleSubmitLogin(onLogin)} className="bg-white p-8 rounded shadow-md w-80">
+          <h2 className="mb-4 text-xl font-bold text-center">Đăng nhập</h2>
+          <input {...registerLogin("username", {required: true})} placeholder="Tài khoản" className="w-full mb-2 p-2 border rounded" />
+          <input {...registerLogin("password", {required: true})} type="password" placeholder="Mật khẩu" className="w-full mb-4 p-2 border rounded" />
+          <button className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 cursor-pointer">Đăng nhập</button>
         </form>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center bg-gray-50 p-6">
-      <div className="w-full max-w-4xl bg-white p-8 shadow-lg rounded-xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Danh sách nhân viên</h1>
-          <button onClick={() => setIsLoggedIn(false)} className="text-red-500 hover:underline">Đăng xuất</button>
-        </div>
-
-        <div className="flex justify-center mb-8">
-          <button onClick={() => openForm('add')} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded shadow">
-            + Thêm nhân viên
-          </button>
-        </div>
-
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-gray-300 text-gray-700">
-              <th className="p-4">Tên</th>
-              <th className="p-4">Vị trí</th>
-              <th className="p-4">Email</th>
-              <th className="p-4">Điện thoại</th>
-              <th className="p-4">Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees && employees.map((emp) => (
-              <tr key={emp.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="p-4">{emp.name}</td>
-                <td className="p-4">{emp.position}</td>
-                <td className="p-4">{emp.email}</td>
-                <td className="p-4">{emp.phone}</td>
-                <td className="p-4 flex gap-3">
-                  <button onClick={() => openForm('edit', emp)} className="text-blue-600 hover:underline">Sửa</button>
-                  <button onClick={() => handleDelete(emp.id)} className="text-red-600 hover:underline">Xóa</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    
+    <div className="p-10 w-full flex flex-col items-center min-h-screen">
+      
+      {/* Container chứa tiêu đề và nút đăng xuất */}
+      {/* Dùng 'relative' để định vị nút đăng xuất sang góc phải */}
+      <div className="w-full max-w-5xl relative flex justify-center items-center mb-6">
+        <h1 className="text-2xl font-bold">Danh sách Nhân viên</h1>
+        
+        {/* Nút đăng xuất được định vị tuyệt đối (absolute) sang góc phải */}
+        <button 
+          onClick={handleLogout} 
+          className="absolute right-0 text-red-500 hover:underline cursor-pointer"
+        >
+          Đăng xuất
+        </button>
       </div>
+      
+      {/* Khối chứa nút Thêm */}
+      <div className="w-full max-w-5xl text-center mb-6">
+        <button 
+          onClick={() => openForm('add')} 
+          className="bg-green-500 text-white px-8 py-2 rounded hover:bg-green-600 transition hover:scale-105 cursor-pointer shadow-md"
+        >
+          + Thêm
+        </button>
+      </div>
+
+      {/* Bảng dữ liệu */}
+      <table className="w-full max-w-5xl border text-center border-collapse bg-white">
+        <thead>
+          <tr className="border-b bg-gray-100">
+            <th className="p-3 border">Tên</th>
+            <th className="p-3 border">Vị trí</th>
+            <th className="p-3 border">Email</th>
+            <th className="p-3 border">Số ĐT</th>
+            <th className="p-3 border">Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {employees.map(emp => (
+            <tr key={emp.id} className="border-b hover:bg-gray-50">
+              <td className="p-3 border">{emp.name}</td>
+              <td className="p-3 border">{emp.position}</td>
+              <td className="p-3 border">{emp.email}</td>
+              <td className="p-3 border">{emp.phone}</td>
+              <td className="p-3 border flex gap-3 justify-center">
+                <button onClick={() => openForm('edit', emp)} className="text-blue-500 hover:underline cursor-pointer">Sửa</button>
+                <button onClick={() => handleDelete(emp.id)} className="text-red-500 hover:underline cursor-pointer">Xóa</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    
+  
+  
 
       {isFormOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <form onSubmit={handleSubmitEmp(onSave)} className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-6">{formType === 'add' ? 'Thêm mới' : 'Cập nhật'}</h2>
-            <input {...registerEmp("name", { required: true })} placeholder="Tên" className="w-full p-3 mb-4 border rounded" />
-            <input {...registerEmp("position")} placeholder="Vị trí" className="w-full p-3 mb-4 border rounded" />
-            <input {...registerEmp("email", { 
-    required: "Email bắt buộc",
+          <form onSubmit={handleSubmitEmp(onSave)} className="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h2 className="mb-4 font-bold text-lg">{formType === 'add' ? 'Thêm mới' : 'Cập nhật'}</h2>
+            <input {...registerEmp("name", {required: true})} placeholder="Tên" className="w-full mb-2 p-2 border rounded" />
+            <input {...registerEmp("position")} placeholder="Vị trí" className="w-full mb-2 p-2 border rounded" />
+            <input 
+        {...registerEmp("email", { 
+          required: "Email là bắt buộc",
+          pattern: {
+            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+            message: "Email không hợp lệ"
+          }
+        })} 
+        placeholder="Email" 
+        className="w-full mb-1 p-2 border rounded" 
+      />
+      {errors.email && <p className="text-red-500 text-xs mb-2">{errors.email.message}</p>}
+            <input 
+  {...registerEmp("phone", { 
+    required: "Số điện thoại là bắt buộc",
     pattern: {
-        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-        message: "Email không đúng định dạng"
+      value: /^08[0-9]{8}$/,
+      message: "Số điện thoại phải bắt đầu bằng 08 và có 10 chữ số"
     }
   })} 
-  placeholder="Email" 
-  className="w-full p-3 mb-4 border rounded" 
+  placeholder="Số ĐT (ví dụ: 08xxxxxxxx)" 
+  className="w-full mb-1 p-2 border rounded" 
 />
-            <input {...registerEmp("phone", { 
-    required: "số điện thoại bắt buộc",
-    pattern: {value: /^08\d{8}$/,
-        message: "Chỉ được nhập số"
-        
-    }
-  })} 
-  placeholder="số điện thoại" 
-  className="w-full p-3 mb-4 border rounded" 
-/>
-            <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setIsFormOpen(false)} className="px-6 py-2 bg-gray-200 rounded">Đóng</button>
-              <button type="submit" className="px-6 py-2 bg-green-500 text-white rounded">Lưu</button>
+{errors.phone && <p className="text-red-500 text-xs mb-2">{errors.phone.message}</p>}
+            <div className="flex justify-end gap-3 mt-4">
+              <button type="button" onClick={() => setIsFormOpen(false)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 cursor-pointer">Hủy</button>
+              <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 cursor-pointer">Lưu</button>
             </div>
           </form>
         </div>

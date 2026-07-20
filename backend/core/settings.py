@@ -11,6 +11,13 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ROTATE_REFRESH_TOKENS': True, # Nên để True
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=5),
+}
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -128,7 +135,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
      "http://localhost:3000", # Đây là cổng mặc định của Vite
 ]
-CORS_ALLOW_ALL_ORIGINS = True
+
 
 # Nếu bạn muốn cho phép cả các phương thức đặc biệt (như PUT, DELETE, PATCH)
 # thì nên thêm dòng này để tránh bị chặn trong các tác vụ CRUD:
@@ -140,3 +147,4 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
+CORS_ALLOW_ALL_ORIGINS = True

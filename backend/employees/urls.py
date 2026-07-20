@@ -8,5 +8,5 @@ router.register(r'departments', DepartmentViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('login/', login_view, name='login'), # THÊM DÒNG NÀY VÀO
+    
 ]
