@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 
+
 function App() {
   const [employees, setEmployees] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -36,15 +37,27 @@ function App() {
     try {
       const res = await axios.post('http://localhost:8000/api/login/', data);
       localStorage.setItem('access_token', res.data.access);
+      localStorage.setItem('refresh_token', res.data.refresh);
       setIsLoggedIn(true);
       window.location.reload();
     } catch { alert("Đăng nhập thất bại!"); }
   };
 
-  const handleLogout = () => {
+  
+  const handleLogout = async () => {
+  try {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      // Thay thế 'http://localhost:8000/api/' bằng đường dẫn backend thực tế của bạn
+      await axios.post('http://localhost:8000/api/logout/', { refresh: refreshToken });
+    }
+  } catch (error) {
+    console.error("Lỗi khi đăng xuất trên server", error);
+  } finally {
     localStorage.clear();
     setIsLoggedIn(false);
-  };
+  }
+};
 
   const openForm = (type, emp = null) => {
     setFormType(type);
