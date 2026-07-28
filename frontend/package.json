@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",
+    "antd": "^6.5.2",
     "axios": "^1.18.1",
+    "i18next": "^26.3.6",
+    "jwt-decode": "^4.0.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.81.0",
-    "react-hot-toast": "^2.6.0"
+    "react-hot-toast": "^2.6.0",
+    "react-i18next": "^17.0.11"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

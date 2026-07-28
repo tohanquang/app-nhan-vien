@@ -30,6 +30,7 @@ services:
     command: >
       bash -c "apt-get update && apt-get install -y gcc libpq-dev && 
                pip install -r requirements.txt && 
+               python manage.py makemigrations employees && 
                python manage.py migrate && 
                python manage.py seed_data && 
                python manage.py runserver 0.0.0.0:8000"
