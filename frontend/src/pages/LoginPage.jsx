@@ -7,41 +7,41 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    console.log("Đang gửi yêu cầu đăng nhập...");
+  // Đưa sự kiện trực tiếp vào đây
+  const handleLogin = async () => {
+    console.log("1. Đã bấm nút đăng nhập!");
 
     try {
-      // 1. Gọi trực tiếp API đăng nhập
       const response = await axiosClient.post("/auth/login/", {
         username,
         password,
       });
-      console.log("KẾT QUẢ ĐĂNG NHẬP THÀNH CÔNG:", response.data);
+      console.log("2. Kết quả từ server:", response.data);
 
-      // 2. Lưu token và thông tin user trực tiếp vào localStorage
+      // Lưu thẳng vào localStorage
       if (response.data.access) {
         localStorage.setItem("access_token", response.data.access);
       }
 
       const userData = response.data.user || response.data;
       localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("access_token", response.data.access);
 
-      // 3. Thông báo và chuyển hướng
+      console.log("3. ĐÃ LƯU XONG VÀO LOCAL STORAGE!");
       alert("Đăng nhập thành công!");
+
       navigate("/");
-      window.location.reload(); // F5 lại trang để cập nhật giao diện ngay lập tức
     } catch (error) {
-      console.error("Lỗi đăng nhập:", error.response || error);
-      alert("Sai tài khoản hoặc mật khẩu!");
+      console.error("Lỗi xảy ra:", error);
+      alert("Đăng nhập thất bại!");
     }
   };
 
   return (
     <div style={{ padding: "50px", maxWidth: "400px", margin: "0 auto" }}>
       <h2>Đăng Nhập</h2>
-      <form onSubmit={handleLogin}>
+
+      {/* Bỏ thẻ <form> và onSubmit đi, dùng div bình thường */}
+      <div>
         <div style={{ marginBottom: "15px" }}>
           <label>Tài khoản:</label>
           <input
@@ -49,7 +49,6 @@ function LoginPage() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-            required
           />
         </div>
         <div style={{ marginBottom: "15px" }}>
@@ -59,22 +58,25 @@ function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-            required
           />
         </div>
+
+        {/* Đổi thành type="button" và gọi onClick trực tiếp */}
         <button
-          type="submit"
+          type="button"
+          onClick={handleLogin}
           style={{
             width: "100%",
             padding: "10px",
             background: "blue",
             color: "white",
             border: "none",
+            cursor: "pointer",
           }}
         >
           Đăng Nhập Ngay
         </button>
-      </form>
+      </div>
     </div>
   );
 }

@@ -9,12 +9,12 @@ const resources = {
   en: { translation: translationEN },
 };
 
-const savedLanguage = localStorage.getItem("app_language") || "vi";
+const savedLanguage = localStorage.getItem("app_language") || "en";
 
 i18n.use(initReactI18next).init({
   resources,
   lng: savedLanguage,
-  fallbackLng: "vi",
+  fallbackLng: "en",
   interpolation: {
     escapeValue: false,
   },

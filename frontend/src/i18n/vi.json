@@ -32,5 +32,6 @@
   "err_email_required": "Vui lòng nhập email",
   "err_email_invalid": "Email không đúng định dạng (Ví dụ: abc@gmail.com)",
   "err_phone_required": "Vui lòng nhập số điện thoại",
-  "err_phone_invalid": "Số điện thoại phải từ 9 đến 11 chữ số với bắt đầu với 08 hoặc 09"
+  "err_phone_invalid": "Số điện thoại phải từ 9 đến 11 chữ số với bắt đầu với 08 hoặc 09",
+  "company": "Công Ty TBA"
 }

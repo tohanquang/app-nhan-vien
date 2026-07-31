@@ -5,6 +5,8 @@ import { Toaster, toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import api from "./api";
 import { Button } from "antd";
+import { LogoutOutlined } from "@ant-design/icons";
+import EmployeeList from "./components/EmployeeList"; // 👈 Nhớ import component vào
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -15,13 +17,6 @@ function App() {
   const [editId, setEditId] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const userRole =
-    localStorage.getItem("role") ||
-    localStorage.getItem("user_role") ||
-    "employee";
-  const isEmployee = userRole === "employee";
-  const canDelete = userRole !== "employee" && userRole !== "guest";
 
   axios.defaults.withCredentials = true;
 
@@ -65,8 +60,6 @@ function App() {
       });
 
       localStorage.setItem("access_token", res.data.access);
-      window.location.href = "/";
-      // Giả lập lưu role nếu backend trả về, hoặc mặc định
       if (res.data.role) {
         localStorage.setItem("user_role", res.data.role);
       }
@@ -96,7 +89,6 @@ function App() {
     }
   };
 
-  // Mở modal Thêm hoặc Sửa
   const openForm = (type, emp = null) => {
     setFormType(type);
     if (type === "edit" && emp) {
@@ -149,25 +141,21 @@ function App() {
           </div>
         </div>
       ),
-      {
-        duration: Infinity,
-        position: "top-center",
-      },
+      { duration: Infinity, position: "top-center" },
     );
   };
 
   const onSave = async (data) => {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-      },
-    };
     try {
       if (formType === "add") {
         const res = await axios.post(
           "http://localhost:8000/api/employees/",
           data,
-          config,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+          },
         );
         setEmployees([...employees, res.data]);
         toast.success(t("success_add"));
@@ -183,6 +171,7 @@ function App() {
     }
   };
 
+  // Màn hình Login
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white-100 relative">
@@ -191,7 +180,7 @@ function App() {
             onClick={toggleLanguage}
             className="px-3 py-1 bg-white border rounded shadow-sm text-sm font-medium cursor-pointer hover:bg-gray-50"
           >
-            {i18n.language === "vi" ? "🇬🇧 English" : "🇻🇳 Tiếng Việt"}
+            {i18n.language === "vi" ? "🇻🇳 Tiếng Việt" : "🇬🇧 English"}
           </button>
         </div>
 
@@ -233,79 +222,63 @@ function App() {
     );
   }
 
+  // Màn hình chính sau khi đăng nhập
   return (
-    <div className="p-10 w-full flex flex-col items-center min-h-screen bg-gray-50 relative">
-      <div className="absolute top-5 right-10">
+    <div className="w-full min-h-screen flex flex-col justify-between bg-gray-50 m-0 p-0">
+      <header className="w-full bg-white shadow-sm px-8 py-6 flex justify-between items-center m-0">
         <button
           onClick={toggleLanguage}
           className="px-3 py-1 bg-white border rounded shadow-sm text-sm font-medium cursor-pointer hover:bg-gray-50"
         >
-          {i18n.language === "vi" ? "🇬🇧 English" : "🇻🇳 Tiếng Việt"}
+          {i18n.language === "vi" ? "🇻🇳 Tiếng Việt" : "🇬🇧 English"}
         </button>
-      </div>
+        <div className="text-xl font-bold text-gray-800">{t("company")}</div>
 
-      <Toaster position="top-right" reverseOrder={false} />
+        <Toaster position="top-left" reverseOrder={false} />
+        <div className="absolute top-5 left-10"></div>
+        <Button
+          type="text"
+          danger
+          icon={<LogoutOutlined style={{ fontSize: "25px" }} />}
+          onClick={handleLogout}
+        >
+          {t("logout_btn")}
+        </Button>
+      </header>
 
-      <div className="w-full max-w-5xl flex flex-col items-center mb-6">
-        <h1 className="text-3xl font-bold text-center mb-4">{t("emp_list")}</h1>
-
-        <div className="w-full max-w-5xl text-center mb-6">
-          {/* Nút Thêm hiển thị bình thường */}
-          <button
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 flex flex-col items-center">
+        <h1 className="text-2xl font-bold mb-4">{t("emp_list")}</h1>
+        <div className="my-6">
+          <Button
+            type="primary"
+            size="middle"
             onClick={() => openForm("add")}
-            className="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition cursor-pointer shadow-md text-sm font-semibold"
+            style={{
+              backgroundColor: "#52c41a",
+              borderColor: "#52c41a",
+              minWidth: "8px",
+            }}
+            className="font-semibold shadow-sm"
           >
             {t("add_btn")}
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="absolute top-5 left-10 text-red-500 hover:underline cursor-pointer"
-          >
-            {t("logout_btn")}
-          </button>
+          </Button>
         </div>
-      </div>
 
-      <table className="w-full max-w-5xl border text-center border-collapse bg-white shadow-sm">
-        <thead>
-          <tr className="border-b bg-gray-100">
-            <th className="p-3 border">{t("col_name")}</th>
-            <th className="p-3 border">{t("col_position")}</th>
-            <th className="p-3 border">{t("col_email")}</th>
-            <th className="p-3 border">{t("col_phone")}</th>
-            <th className="p-3 border">{t("col_action")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {employees.map((emp) => (
-            <tr key={emp.id} className="border-b hover:bg-gray-50">
-              <td className="p-3 border">{emp.name}</td>
-              <td className="p-3 border">{emp.position}</td>
-              <td className="p-3 border">{emp.email}</td>
-              <td className="p-3 border">{emp.phone}</td>
-
-              {/* Cột thao tác: Hiển thị nút Sửa, nhưng chỉ hiển thị nút Xóa nếu có quyền canDelete */}
-              <td className="p-3 border flex gap-3 justify-center items-center">
-                <button
-                  onClick={() => openForm("edit", emp)}
-                  className="text-blue-500 hover:underline cursor-pointer font-medium"
-                >
-                  {t("edit")}
-                </button>
-                <Button
-                  type="primary"
-                  danger
-                  disabled={isEmployee}
-                  onClick={() => handleDelete(emp.id)}
-                >
-                  {t("delete")}
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {/* 🚀 GỌI COMPONENT EMPLOYEE LIST ĐÃ TÁI SỬ DỤNG */}
+        <div className="w-full">
+          <EmployeeList
+            employees={employees}
+            openForm={openForm}
+            onDelete={handleDelete}
+            t={t}
+          />
+        </div>
+      </main>
+      {/* FOOTER */}
+      <footer className="w-full bg-white border-t border-gray-200 py-6 text-center text-gray-500 text-sm">
+        <p>© 2026 Employee Management System. All rights reserved.</p>
+        <p className="mt-1">Liên hệ hỗ trợ: support@company.com</p>
+      </footer>
 
       {/* MODAL THÊM / SỬA NHÂN VIÊN */}
       {isFormOpen && (
@@ -330,37 +303,38 @@ function App() {
             <div className="mb-3">
               <input
                 {...registerEmp("email", {
-                  required: t("err_email_required"),
+                  required: "Email là bắt buộc",
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: t("err_email_invalid"),
+                    message: "Email không hợp lệ",
                   },
                 })}
                 placeholder={t("col_email")}
                 className="w-full mb-2 p-2 border rounded"
               />
               {errors.email && (
-                <span className="text-red-500 text-xs">
+                <p className="text-red-500 text-xs mb-2">
                   {errors.email.message}
-                </span>
+                </p>
               )}
             </div>
             <div className="mb-3">
               <input
                 {...registerEmp("phone", {
-                  required: t("err_phone_required"),
+                  required: "Số điện thoại là bắt buộc",
                   pattern: {
                     value: /^0(8|9)[0-9]{8}$/,
-                    message: t("err_phone_invalid"),
+                    message:
+                      "Số điện thoại phải bắt đầu bằng 08 hoặc 09 và có 10 chữ số",
                   },
                 })}
                 placeholder={t("col_phone")}
                 className="w-full mb-2 p-2 border rounded"
               />
               {errors.phone && (
-                <span className="text-red-500 text-xs">
+                <p className="text-red-500 text-xs mb-2">
                   {errors.phone.message}
-                </span>
+                </p>
               )}
             </div>
 

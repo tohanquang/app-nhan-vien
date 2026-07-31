@@ -1,45 +1,44 @@
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import React from "react";
+import ReusableTable from "./ReusableTable";
 
-const EmployeeList = ({ employees, onEdit, onDelete }) => {
-  const { user } = useAuth();
-  console.log("Dữ liệu user từ AuthContext:", user);
+const EmployeeList = ({ employees, openForm, onDelete, t }) => {
+  // Chỉ cần khai báo các cột thông tin, không cần code nút bấm rườm rà nữa
+  const columns = [
+    {
+      title: t ? t("col_name") : "Tên",
+      dataIndex: "name",
+      key: "name",
+      align: "center",
+    },
+    {
+      title: t ? t("col_position") : "Vị trí",
+      dataIndex: "position",
+      key: "position",
+      align: "center",
+    },
+    {
+      title: t ? t("col_email") : "Email",
+      dataIndex: "email",
+      key: "email",
+      align: "center",
+    },
+    {
+      title: t ? t("col_phone") : "Số ĐT",
+      dataIndex: "phone",
+      key: "phone",
+      align: "center",
+    },
+  ];
 
   return (
-    <div>
-      <h2>Danh sách nhân viên</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Tên</th>
-            <th>Email</th>
-            <th>Vị trí</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {employees && employees.map((emp) => (
-            <tr key={emp.id}>
-              <td>{emp.name}</td>
-              <td>{emp.email}</td>
-              <td>{emp.position}</td>
-              <td>
-                {/* Chỉ hiện nút Sửa nếu là Admin hoặc Employee */}
-                {user && (user.role === 'admin' || user.is_superuser || user.is_staff) ? (
-  <span 
-    onClick={() => onDelete && onDelete(emp.id)} 
-    style={{ color: 'red', cursor: 'pointer', marginLeft: '8px' }}
-  >
-    Xóa
-  </span>
-) : null}
-                
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ReusableTable
+      dataSource={employees}
+      columns={columns}
+      onEdit={(record) => openForm("edit", record)}
+      onDelete={onDelete}
+      t={t}
+      rowKey="id"
+    />
   );
 };
 

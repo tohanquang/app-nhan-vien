@@ -32,5 +32,6 @@
   "err_email_required": "Please enter email",
   "err_email_invalid": "Invalid email format (e.g., abc@gmail.com)",
   "err_phone_required": "Please enter phone number",
-  "err_phone_invalid": "Phone number must be between 9 and 11 digits and start with 08 or 09"
+  "err_phone_invalid": "Phone number must be between 9 and 11 digits and start with 08 or 09",
+  "company": "TBA Company"
 }
