@@ -4,8 +4,13 @@ import { useForm } from "react-hook-form";
 import { Toaster, toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import api from "./api";
-import { Button } from "antd";
-import { LogoutOutlined } from "@ant-design/icons";
+import { Button, Input, Table, message } from "antd";
+import {
+  SearchOutlined,
+  GlobalOutlined,
+  LogoutOutlined,
+} from "@ant-design/icons";
+
 import EmployeeList from "./components/EmployeeList"; // 👈 Nhớ import component vào
 
 function App() {
@@ -17,6 +22,18 @@ function App() {
   const [editId, setEditId] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  const [searchText, setSearchText] = useState("");
+  const filteredEmployees = employees.filter((emp) => {
+    const query = searchText.toLowerCase();
+    return (
+      (emp.name && emp.name.toLowerCase().includes(query)) ||
+      (emp.email && emp.email.toLowerCase().includes(query))
+    );
+  });
 
   axios.defaults.withCredentials = true;
 
@@ -248,7 +265,16 @@ function App() {
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 flex flex-col items-center">
         <h1 className="text-2xl font-bold mb-4">{t("emp_list")}</h1>
-        <div className="my-6">
+        <div className="w-full flex justify-between items-center my-4">
+          <Input
+            placeholder={t("search")}
+            prefix={<SearchOutlined className="text-gray-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            className="max-w-xs"
+            size="middle"
+          />
           <Button
             type="primary"
             size="middle"
@@ -267,7 +293,7 @@ function App() {
         {/* 🚀 GỌI COMPONENT EMPLOYEE LIST ĐÃ TÁI SỬ DỤNG */}
         <div className="w-full">
           <EmployeeList
-            employees={employees}
+            employees={filteredEmployees}
             openForm={openForm}
             onDelete={handleDelete}
             t={t}

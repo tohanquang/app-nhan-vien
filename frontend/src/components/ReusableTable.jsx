@@ -54,11 +54,22 @@ const ReusableTable = ({
     <div className="w-full max-w-5xl">
       <Table
         dataSource={dataSource}
-        columns={fullColumns}
+        columns={columns}
         rowKey={rowKey}
-        bordered
-        pagination={false}
-        className="shadow-sm bg-white"
+        pagination={{
+          defaultPageSize: 5,
+
+          pageSizeOptions: ["5", "10", "20"],
+          showSizeChanger: true,
+
+          locale: {
+            items_per_page: "",
+          },
+          showTotal: (total, range) =>
+            t
+              ? `${range[0]}-${range[1]} ${t("of")} ${total} ${t("items")}`
+              : `${range[0]}-${range[1]} of ${total} items`,
+        }}
       />
     </div>
   );
